@@ -1,0 +1,25 @@
+npm i --save-dev prisma typescript ts-node @types/node nodemon
+
+
+make tsconfig.json ->
+ {
+  "compilerOptions": {
+    "sourceMap": true,
+    "outDir": "dist",
+    "strict": true,
+    "lib": ["esnext"],
+    "esModuleInterop": true
+  }
+}
+
+npx prisma init --datasource-provider mysql
+
+npx prisma migrate dev --name init
+
+
+npm i @prisma/client
+npx prisma generate
+
+
+
+https://documenter.getpostman.com/view/33181795/2sA2rCUhBC 

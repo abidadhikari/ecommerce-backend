@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // provider = "mysql"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  name                  String
+  dob                   DateTime?
+  isGoogleAuthenticated Boolean   @default(false)
+  email                 String    @unique
+  role                  Role      @default(BASIC)
+  password              String
+  isVerified            Boolean   @default(false)
+  token                 String    @default("")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  userPreference   UserPreference? @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String?         @unique
+  Review           Review[]
+
+  // this is model attributes 
+  // @@unique([age, name])
+  @@index([email])
+}
+
+model UserPreference {
+  id String @id @default(uuid())
+
+  emailUpdates Boolean
+
+  User User?
+}
+
+model Product {
+  id               String         @id @default(uuid())
+  title            String
+  brand            String
+  long_description String?
+  price            Int
+  crossedPrice     Int?
+  coverImage       String?
+  images           ProductImage[]
+  Category         Category?      @relation(fields: [categoryId], references: [id])
+  categoryId       String?
+  reviews          Review[]
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+  image     String
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String
+
+  products Product[]
+  image    String?
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  review    String?
+  star      Float?
+  User      User     @relation(fields: [userId], references: [id])
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+  userId    String
+}
+
+enum Role {
+  BASIC
+  ADMIN
+  SUPERADMIN
+}
