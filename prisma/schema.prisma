@@ -9,8 +9,7 @@ generator client {
 }
 
 datasource db {
-  // provider = "mysql"
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -30,6 +29,8 @@ model User {
   userPreference   UserPreference? @relation(fields: [userPreferenceId], references: [id])
   userPreferenceId String?         @unique
   Review           Review[]
+  Cart             Cart[]
+  profileImage     String?
 
   // this is model attributes 
   // @@unique([age, name])
@@ -44,33 +45,67 @@ model UserPreference {
   User User?
 }
 
+model Cart {
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  count     Int
+}
+
 model Product {
-  id               String         @id @default(uuid())
-  title            String
-  brand            String
-  long_description String?
-  price            Int
-  crossedPrice     Int?
-  coverImage       String?
-  images           ProductImage[]
-  Category         Category?      @relation(fields: [categoryId], references: [id])
-  categoryId       String?
-  reviews          Review[]
+  id            String          @id @default(uuid())
+  title         String
+  brand         String
+  description   String?
+  price         Int
+  crossedPrice  Int?
+  thumbnail     String?
+  images        ProductImage[]
+  Category      Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId    String?
+  reviews       Review[]
+  ProductRating ProductRating[]
+  visibility    Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  Cart          Cart[]
+  Orders        Orders[]
 }
 
 model ProductImage {
   id        String   @id @default(uuid())
-  Product   Product? @relation(fields: [productId], references: [id])
+  Product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String?
   image     String
+}
+
+model ProductRating {
+  id        String   @id @default(uuid())
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+  rating    Float
 }
 
 model Category {
   id   String @id @default(uuid())
   name String
 
-  products Product[]
-  image    String?
+  products  Product[]
+  image     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Orders {
+  id                      String      @id @default(uuid())
+  customMessageToCustomer String?
+  status                  OrderStatus @default(PENDING)
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+  Product                 Product?    @relation(fields: [productId], references: [id])
+  productId               String?
 }
 
 model Review {
@@ -87,4 +122,17 @@ enum Role {
   BASIC
   ADMIN
   SUPERADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  ON_HOLD
+  BACKORDERED
+  RETURNED
 }

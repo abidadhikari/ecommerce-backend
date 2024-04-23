@@ -5,10 +5,10 @@ import { PrismaClient } from "@prisma/client";
 import { isAuth } from "../middleware/auth";
 const prisma = new PrismaClient();
 
-//create product
+//create order
 router.post("/", async (req: any, res: any) => {
   try {
-    const product = await prisma.product.create({
+    const product = await prisma.orders.create({
       data: {
         ...req.body,
         images: {
@@ -60,12 +60,29 @@ router.put("/:id", async (req: any, res: any) => {
       },
     });
     if (product) {
+      const images = req.body.images;
+      console.log("________________________IMAGES________________________");
+      console.log(images);
+      delete req.body.images;
       const updatedProduct = await prisma.product.update({
         where: {
           id: productId,
         },
         data: {
           ...req.body,
+          images: {
+            upsert: images?.map((image: any) => ({
+              where: { id: image.id || undefined },
+              update: {
+                // productId,
+                image: image.image,
+              },
+              create: {
+                // productId,
+                image: image.image,
+              },
+            })),
+          },
         },
         include: {
           images: true,
@@ -119,113 +136,6 @@ router.get("/", async (req: any, res: any) => {
       data: products,
     });
   } catch (error) {}
-});
-
-//add product image
-router.post("/add-image/:id", async (req: any, res: any) => {
-  try {
-    const productId = req.params.id;
-    const addedProductImage = await prisma.productImage.create({
-      data: {
-        productId: productId,
-        image: req.body.image || "noimage",
-      },
-    });
-    if (addedProductImage)
-      return res.status(200).json({
-        success: true,
-        message: "Image added",
-        data: addedProductImage,
-      });
-    else
-      return res
-        .status(404)
-        .json({ success: false, message: "Image not added" });
-  } catch (error: any) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Something went wrong" });
-  }
-});
-
-//get product images
-router.get("/get-image/:id", async (req: any, res: any) => {
-  try {
-    const productId = req.params.id;
-    const productImages = await prisma.productImage.findMany({
-      where: { productId: productId },
-      orderBy: {},
-    });
-    if (productImages)
-      return res.status(200).json({
-        success: true,
-        message: "Image found",
-        data: productImages,
-      });
-    else
-      return res
-        .status(404)
-        .json({ success: false, message: "Image not found" });
-  } catch (error: any) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Something went wrong" });
-  }
-});
-
-//delete prodduct image
-router.delete("/delete-image/:id", async (req: any, res: any) => {
-  try {
-    const productId = req.params.id;
-    const deletedProduct = await prisma.productImage.delete({
-      where: {
-        id: productId,
-      },
-    });
-    if (deletedProduct)
-      return res.status(200).json({
-        success: true,
-        message: "Image deleted",
-        data: deletedProduct,
-      });
-    else
-      return res
-        .status(404)
-        .json({ success: false, message: "Image not found to delete" });
-  } catch (error: any) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Something went wrong" });
-  }
-});
-
-//update prodduct image
-router.put("/update-image/:id", async (req: any, res: any) => {
-  try {
-    const productId = req.params.id;
-    const updatedProduct = await prisma.productImage.update({
-      where: {
-        id: productId,
-      },
-      data: {
-        ...req.body,
-      },
-    });
-    if (updatedProduct)
-      return res.status(200).json({
-        success: true,
-        message: "Image updated",
-        data: updatedProduct,
-      });
-    else
-      return res
-        .status(404)
-        .json({ success: false, message: "Image not found to update" });
-  } catch (error: any) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Something went wrong" });
-  }
 });
 
 // get product by categories
@@ -324,7 +234,5 @@ router.get("/:id", async (req: any, res: any) => {
     return res.status(400).json({ success: false, error });
   }
 });
-
-// get all products with reviews
 
 module.exports = router;

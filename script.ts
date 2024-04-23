@@ -51,6 +51,7 @@ app.use(express.json());
 app.use("/auth/", require("./src/routes/googleauth"));
 app.use("/api/test", require("./src/routes/test"));
 app.use("/api/user", require("./src/routes/user"));
+app.use("/api/cart", require("./src/routes/cart"));
 app.use("/api/products", require("./src/routes/products"));
 app.use("/api/category", require("./src/routes/category"));
 app.use("/api/review", require("./src/routes/review"));
