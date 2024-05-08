@@ -72,7 +72,14 @@ router.get(
 router.get("/logout", (req: any, res: any) => {
   req.logout();
 
-  res.status(200).json({ success: true, message: "Logout success" });
+  // Clear cookies
+  req.session = null;
+
+  // res.clearCookie("session");
+  return res
+    .status(200)
+    .clearCookie("session")
+    .json({ success: true, message: "Logout success" });
 });
 
 module.exports = router;

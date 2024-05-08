@@ -13,6 +13,7 @@ router.get("/", isAuth, async (req: any, res: any) => {
         where: {
           userId: req.body.user.data.id,
         },
+        include: { product: true },
       });
       res.status(200).json({
         success: true,
@@ -54,9 +55,9 @@ router.post("/", isAuth, async (req: any, res: any) => {
         });
         console.log("Entered created EXIT");
         if (item) {
-          return res.status(201).json({
+          return res.status(200).json({
             success: true,
-            message: "Cart ADDed",
+            message: "Added to Cart",
             data: item,
           });
         } else {
@@ -76,7 +77,9 @@ router.post("/", isAuth, async (req: any, res: any) => {
             },
           });
           return deleteItem
-            ? res.status(200).json({ success: true, message: "Deleted" })
+            ? res
+                .status(200)
+                .json({ success: true, message: "Removed From Cart" })
             : res
                 .status(500)
                 .json({ success: false, message: "failed to delete" });
@@ -96,6 +99,7 @@ router.post("/", isAuth, async (req: any, res: any) => {
               return res.status(200).json({
                 success: true,
                 message: "Item in cart updated",
+                data: updateItem,
               });
             }
           }

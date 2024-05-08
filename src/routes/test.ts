@@ -236,7 +236,7 @@ router.get("/populate-image", async (req: any, res: any) => {
 router.get("/clear", async (req: any, res: any) => {
   try {
     // clear users details
-    const users = await prisma.user.deleteMany();
+    // const users = await prisma.user.deleteMany();
     const products = await prisma.product.deleteMany();
     // if (users.count === 0) {
     //   throw { message: "Error Deleteing Users" };
@@ -245,7 +245,8 @@ router.get("/clear", async (req: any, res: any) => {
     res.status(200).json({
       success: true,
       message: "Data Deleted",
-      data: users,
+      // data: users,
+      products: products,
     });
   } catch (error: any) {
     res.status(500).json({

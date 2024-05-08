@@ -294,6 +294,40 @@ router.get("/search", async (req: any, res: any) => {
   }
 });
 
+// get products per category
+router.get("/products-per-category", async (req: any, res: any) => {
+  try {
+    // Query the database to retrieve all categories along with their associated products
+    const categoriesWithProducts = await prisma.category.findMany({
+      include: {
+        products: true,
+      },
+    });
+
+    // Initialize an object to store the counts of products per category
+    const productsPerCategory: any = {};
+
+    // Count the number of products for each category
+    categoriesWithProducts.forEach((category) => {
+      productsPerCategory[category.name] = category.products.length;
+    });
+
+    // Return the data in the desired format
+    const formattedData = Object.entries(productsPerCategory).map(
+      ([name, count]) => ({
+        name,
+        products: count,
+      })
+    );
+
+    // Return the formatted data
+    return res.status(200).json({ success: true, data: formattedData });
+  } catch (error) {
+    console.error("Error fetching products per category:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 //get single product data
 router.get("/:id", async (req: any, res: any) => {
   try {
@@ -324,7 +358,5 @@ router.get("/:id", async (req: any, res: any) => {
     return res.status(400).json({ success: false, error });
   }
 });
-
-// get all products with reviews
 
 module.exports = router;

@@ -31,6 +31,7 @@ model User {
   Review           Review[]
   Cart             Cart[]
   profileImage     String?
+  Orders           Orders[]
 
   // this is model attributes 
   // @@unique([age, name])
@@ -47,9 +48,9 @@ model UserPreference {
 
 model Cart {
   id        String  @id @default(uuid())
-  user      User    @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   count     Int
 }
@@ -58,7 +59,7 @@ model Product {
   id            String          @id @default(uuid())
   title         String
   brand         String
-  description   String?
+  description   String?         @db.VarChar(1000)
   price         Int
   crossedPrice  Int?
   thumbnail     String?
@@ -106,6 +107,11 @@ model Orders {
   updatedAt               DateTime    @updatedAt
   Product                 Product?    @relation(fields: [productId], references: [id])
   productId               String?
+  quantity                Int
+  User                    User        @relation(fields: [userId], references: [id])
+  payment_type            PaymentType @default(COD)
+  userId                  String
+  orderPrice              Int
 }
 
 model Review {
@@ -135,4 +141,9 @@ enum OrderStatus {
   ON_HOLD
   BACKORDERED
   RETURNED
+}
+
+enum PaymentType {
+  COD
+  ESEWA
 }

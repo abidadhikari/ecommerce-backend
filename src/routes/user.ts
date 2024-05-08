@@ -11,6 +11,11 @@ import { getName } from "../helper";
 import { isAdminAuth, isAuth } from "../middleware/auth";
 const prisma = new PrismaClient();
 
+enum Role {
+  BASIC,
+  ADMIN,
+  SUPERADMIN,
+}
 //get all data
 router.get("/", async (req: any, res: any) => {
   try {
@@ -19,6 +24,32 @@ router.get("/", async (req: any, res: any) => {
     return res.status(200).json({
       success: true,
       message: "Data retrieved",
+      total: usersCount,
+      data: users,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Something wrong",
+    });
+  }
+});
+
+//get all customer only data
+router.get("/only", async (req: any, res: any) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        role: "BASIC",
+      },
+    });
+    const usersCount = await prisma.user.count({
+      where: {
+        role: "BASIC",
+      },
+    });
+    return res.status(200).json({
+      success: true,
+      message: "USERS Data retrieved",
       total: usersCount,
       data: users,
     });
@@ -191,6 +222,64 @@ router.get("/getme", isAuth, async (req: any, res: any) => {
       error,
       message: "Something went erong during login",
     });
+  }
+});
+
+// last 7 days created customers
+router.get("/user-creations-last-7-days", async (req: any, res: any) => {
+  try {
+    // Get the current date and date 7 days ago
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    // Generate an array of dates for the last 7 days
+    const dates = [];
+    for (
+      let date = new Date(sevenDaysAgo);
+      date <= currentDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      dates.push(new Date(date));
+    }
+
+    // Query the database for user creations within the last 7 days with role 'BASIC'
+    const userCreations = await prisma.user.findMany({
+      where: {
+        createdAt: {
+          gte: sevenDaysAgo.toISOString(), // Greater than or equal to seven days ago
+          lte: currentDate.toISOString(), // Less than or equal to current date
+        },
+        role: "BASIC",
+      },
+      orderBy: {
+        createdAt: "asc", // Order by creation date ascending
+      },
+    });
+
+    // Initialize a map to count user creations for each date
+    const userCreationsMap = new Map();
+    dates.forEach((date) =>
+      userCreationsMap.set(date.toISOString().split("T")[0], 0)
+    );
+
+    // Count user creations for each date
+    userCreations.forEach((user) => {
+      const dateKey = new Date(user.createdAt).toISOString().split("T")[0];
+      userCreationsMap.set(dateKey, userCreationsMap.get(dateKey) + 1);
+    });
+
+    // Format the data into the desired format
+    const formattedData: any = [];
+    userCreationsMap.forEach((count, date) => {
+      formattedData.push({ value: count, date });
+    });
+
+    // Return the formatted data
+    return res.status(200).json({ success: true, data: formattedData });
+  } catch (error) {
+    console.error("Error fetching user creation data:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
